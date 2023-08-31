@@ -1,0 +1,56 @@
+import requests
+import json
+
+# Define your Microsoft Graph API endpoint and access token
+graph_endpoint = "https://graph.microsoft.com/v1.0/me"
+access_token = "YOUR_ACCESS_TOKEN"  # You need to obtain an access token with appropriate permissions
+
+# Define the content for your PowerPoint graph
+graph_data = {
+    "chartType": "BarClustered",
+    "title": {"text": "Sample Chart"},
+    "series": [
+        {
+            "name": "Series 1",
+            "values": [1, 2, 3, 4, 5]
+        },
+        {
+            "name": "Series 2",
+            "values": [5, 4, 3, 2, 1]
+        }
+    ],
+    "categoryLabels": ["Category 1", "Category 2", "Category 3", "Category 4", "Category 5"]
+}
+
+# Create a new slide in a PowerPoint presentation with the graph
+def create_slide_with_graph(access_token, graph_data):
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    # Define the request payload to create a slide with a graph
+    request_data = {
+        "displayName": "Graph Slide",
+        "content": [
+            {
+                "@odata.type": "#microsoft.graph.slides",
+                "chart": graph_data
+            }
+        ]
+    }
+
+    response = requests.post(f"{graph_endpoint}/me/drive/root:/Documents/presentation.pptx:/createUploadSession", headers=headers)
+    upload_url = response.json().get("uploadUrl")
+
+    # Upload the presentation with the new slide
+    with open("presentation.pptx", "rb") as file:
+        response = requests.put(upload_url, data=file)
+
+    if response.status_code == 200:
+        print("Slide with graph added successfully.")
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+
+# Call the function to create the slide with the graph
+create_slide_with_graph(access_token, graph_data)
